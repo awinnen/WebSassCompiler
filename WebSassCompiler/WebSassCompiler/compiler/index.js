@@ -82,7 +82,8 @@ if (app.get('env') === 'development') {
 	app.use((err, req, res, next) => {
 		res.status(err.status || 500).json({
 			message: err.message,
-			error: err
+			error: err,
+			node_version: process.version
 		});
 	});
 }
@@ -92,7 +93,8 @@ if (app.get('env') === 'development') {
 app.use((err, req, res, next) => {
 	return res.status(err.status || 500).json({
 		message: err.message,
-		error: {}
+		error: {},
+		node_version: process.version
 	});
 });
 
