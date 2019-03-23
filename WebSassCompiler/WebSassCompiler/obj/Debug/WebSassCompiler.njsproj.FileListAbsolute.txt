@@ -1,0 +1,3 @@
+C:\git\websasscompiler\WebSassCompiler\WebSassCompiler\obj\Debug\WebSassCompiler.njsprojAssemblyReference.cache
+C:\git\websasscompiler\WebSassCompiler\WebSassCompiler\obj\Debug\WebSassCompiler.njsproj.CoreCompileInputs.cache
+C:\git\websasscompiler\WebSassCompiler\WebSassCompiler\bin\Microsoft.NodejsTools.WebRole.dll
