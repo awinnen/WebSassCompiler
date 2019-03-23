@@ -21,7 +21,7 @@
     "morgan": "^1.7.0",
     "node-sass": "^4.11.0"
   },
-  "engines": {
-    "node": "~6.10.x"
-  }
+	"engines": {
+		"node": "~10.6.x"
+	}
 }

@@ -48,7 +48,7 @@ app.post("/", (req, res, next) => {
 
 	extract(`${zip.path}`, { dir: extractPath }, function (err) {
 		if (err) {
-			next(err, null, 500);
+			next(createError("Error extracting archive", err, 500));
 		} else if (!fs.existsSync(entryFile)) {		
 			return next(createError("EntryFile does not exist in zip archive", {
 				uploadedFile: zip.name,
