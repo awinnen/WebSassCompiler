@@ -1,6 +1,6 @@
 ﻿'use strict';
 const createHandler = require("azure-function-express").createHandler;
-const debug = require('debug');
+const debug = require('debug')('WebSassCompiler');
 const express = require('express');
 const fs = require('fs-extra');
 const logger = require('morgan');
@@ -23,7 +23,7 @@ app.use(formidableMiddleware({
 	uploadDir: tmpUploadDir,
 	multiples: true // req.files to be arrays of files
 }));
-app.use(cors())
+app.use(cors());
 
 app.get("/", (req, res) => {
 	res.sendFile(`${__dirname}/index.html`);
@@ -38,30 +38,37 @@ app.post("/", (req, res, next) => {
 		return next(createError('No EntryFile specified. You need to specify an entrypoint. Usually something like main.scss', null, 400));
 	}
 
-	const extractPath = createTempPath();
-	const entryFile = `${extractPath}${req.fields.entryFile}`;
-	const zip = Object.values(req.files)[0];
+	createTempPath().then(extractPath => {
+		const entryFile = `${extractPath}${req.fields.entryFile}`;
+		const zip = Object.values(req.files)[0];
 
-	if (!zip.name.endsWith(".zip")) {
-		return next(createError("Not a .zip file.", null, 400));
-	}
-
-	extract(`${zip.path}`, { dir: extractPath }, function (err) {
-		if (err) {
-			next(createError("Error extracting archive", err, 500));
-		} else if (!fs.existsSync(entryFile)) {		
-			return next(createError("EntryFile does not exist in zip archive", {
-				uploadedFile: zip.name,
-				entryFile: entryFile,
-				filesList: fs.readdirSync(extractPath)
-			}, 400));
+		if (!zip.name.endsWith(".zip")) {
+			return next(createError("Not a .zip file.", null, 400));
 		}
-		sass.render({ file: entryFile, outputStyle: req.fields.outputStyle || "expanded" }, (err, result) => {
+
+		extract(`${zip.path}`, { dir: extractPath }, function (err) {
 			if (err) {
-				next(createError("Cannot compile SASS", err, 500));
+				return next(createError("Error extracting archive", err, 500));
 			}
-			fs.removeSync(extractPath);
-			return res.contentType("text/css").send(result.css);
+			fs.exists(entryFile, entryExists => {
+				if (!entryExists) {
+					fs.readdir(extractPath).then(dirContent => {
+						return next(createError("EntryFile does not exist in zip archive", {
+							uploadedFile: zip.name,
+							entryFile: entryFile,
+							filesList: dirContent
+						}, 400));
+					});
+				}
+				sass.render({ file: entryFile, outputStyle: req.fields.outputStyle || "expanded" }, (err, result) => {
+					if (err) {
+						return next(createError("Cannot compile SASS", err, 500));
+					}
+					fs.remove(extractPath).then(() => {
+						return res.contentType("text/css").send(result.css);
+					});
+				});
+			});
 		});
 	});
 
@@ -100,6 +107,7 @@ app.use((err, req, res, next) => {
 
 app.set('port', process.env.PORT || 3000);
 process.on('uncaughtException', (ex) => {
+	debug(ex);
 });
 const server = app.listen(app.get('port'), () => {
 	debug('Express server listening on port ' + server.address().port);
@@ -117,6 +125,5 @@ function createError(message, object, status) {
 
 function createTempPath() {
 	const path = `${tmpUploadDir}scss/${Date.now()}/`;
-	fs.ensureDirSync(path);
-	return path;
+	return fs.ensureDir(path).then(() => path);
 }
