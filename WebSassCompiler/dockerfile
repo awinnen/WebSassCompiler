@@ -1,0 +1,12 @@
+FROM node:11.13.0-stretch-slim
+
+RUN mkdir /mnt/websasscompiler
+
+COPY WebSassCompiler/compiler /mnt/websasscompiler/compiler
+COPY WebSassCompiler/package.json /mnt/websasscompiler/package.json
+COPY WebSassCompiler/package-lock.json /mnt/websasscompiler/package-lock.json
+
+WORKDIR "/mnt/websasscompiler"
+RUN npm ci
+
+ENTRYPOINT ["node", "compiler/index.js"]
