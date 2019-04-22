@@ -9,4 +9,5 @@ COPY WebSassCompiler/package-lock.json /mnt/websasscompiler/package-lock.json
 WORKDIR "/mnt/websasscompiler"
 RUN npm ci
 
+EXPOSE 3000
 ENTRYPOINT ["node", "compiler/index.js"]
